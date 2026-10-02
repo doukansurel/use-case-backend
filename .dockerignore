@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Python ve Sanal Ortamlar
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# Test ve Kod Kapsamı
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+tests/
+
+# Yerel Veritabanı ve Log Dosyaları
+*.db
+*.sqlite
+*.sqlite3
+visionqc.db
+*.log
+
+# Ortam Değişkenleri (Gizlilik ve Güvenlik)
+.env
+.env.local
+.env.*.local
+
+# IDE ve İşletim Sistemi Kalıntıları
+.DS_Store
+.AppleDouble
+.LSOverride
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker ve Geçici Dosyalar
+docker-compose.override.yml

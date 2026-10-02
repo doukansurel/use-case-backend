@@ -1,0 +1,14 @@
+# ==============================================================================
+# VisionQC - Geliştirme (Development) Docker Compose Yapılandırması
+#
+# Canlı kod senkronizasyonu (Hot-Reload) ile çalıştırmak için:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# ==============================================================================
+services:
+  backend:
+    volumes:
+      - ./app:/app/app
+      - ./run.py:/app/run.py
+    environment:
+      - DEBUG=True
+    command: ["python", "run.py", "--host", "0.0.0.0", "--port", "8000"]
