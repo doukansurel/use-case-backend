@@ -203,50 +203,7 @@ Tüm rotalar `/api/v1` önekiyle sunulur. Swagger arayüzü: `/docs` · ReDoc: `
 
 ---
 
-## 7. Gelecek Mimari Yol Haritası: Özel Görüntü Modelleri ve Anomali Tespiti Entegrasyonu
-
-Mevcut sistemde genel amaçlı Vision-LLM (Gemini / OpenAI) hem kusuru bulmakta hem de açıklama üretmektedir. Uzun vadeli endüstriyel standart mimaride sorumluluklar ayrıştırılmalıdır:
-
-```
-[ Ham Parça Görseli ]
-         │
-         ├──► [ 1. Kademe: Özel Görüntü Modeli (CV) ]
-         │      ├── Nesne Tespiti (YOLOv8/YOLOv11): Bounding box, kusur tipi, gerçek olasılık
-         │      └── Anomali Tespiti (PatchCore / Anomalib): Piksel ısı haritası, anomali skoru
-         │
-         ▼
-[ Sayısal Metrikler + Kusur Koordinatları + Kırpılmış Görsel ]
-         │
-         ▼
-[ 2. Kademe: Multimodal LLM (Açıklama & Raporlama) ]
-         ├── Operatöre yönelik teknik gerekçelendirme
-         ├── Tolerans standardı uygunluk analizi (ISO / MIL-STD)
-         └── Kök neden hipotezi ve aksiyon önerisi
-```
-
-### 7.1 Nesne Tespiti (YOLO Tabanlı Yaklaşım)
-- **Model:** YOLOv8-Detection / YOLOv11.
-- **Kabiliyet:** Denetimli (supervised) olarak etiketlenmiş yüzey kusurları üzerinde eğitilir.
-- **Çıktı:** Kusurun görsel üzerindeki kesin koordinatları ($[x_{min}, y_{min}, x_{max}, y_{max}]$), kusur sınıfı ve **softmax kalibreli kesin sınıf olasılığı**.
-- **Kazanım:** Kusurun tam olarak nerede olduğu operatöre görsel bir çerçeve içinde sunulur.
-
-### 7.2 Denetimsiz Anomali Tespiti (PatchCore / Anomalib Yaklaşımı)
-- **Model:** PatchCore (Memory Bank Nearest Neighbors) veya Anomalib kütüphanesi (Padim, FastFlow).
-- **Kabiliyet:** Endüstride "tüm kusur türlerini önceden toplamak ve etiketlemek" imkansızdır. PatchCore, **sadece sağlam (defectsiz) parçalar** üzerinde eğitilir.
-- **Çıktı:** 
-  1. Parça genel anomali skoru (threshold ile net karar).
-  2. Piksel seviyesinde anomali ısı haritası (Pixel-level segmentation mask).
-- **Kazanım:** Daha önce hiç görülmemiş imalat ve montaj hataları dahi piksel anomalisi olarak anında yakalanır.
-
-### 7.3 LLM'in Yeni Rolü: Akıllı Raporlama ve İletişim Ajanı
-Görüntü modeli kusuru kesin olarak tespit edip lokalize ettikten sonra, LLM sadece açıklama katmanında devreye girer:
-- *Girdi:* Tespit edilen kusur sınıfı, koordinatları, anomali haritası istatistikleri ve ürün teknik spektleri.
-- *Çıktı:* "Parçada 1.2mm yüzey çiziği tespit edilmiş olup MIL-PRF-13830B optik yüzey tolerans sınırını aşmaktadır. Mercek kaplama işlemine iade edilmelidir."
-- Böylece kalite kontroldeki **"halüsinasyon" ve "sahte güven skoru" riskleri sıfırlanmış olur.**
-
----
-
-## 8. Çalıştırma ve Test
+## 7. Çalıştırma ve Test
 
 | Ortam | Komut |
 |---|---|
