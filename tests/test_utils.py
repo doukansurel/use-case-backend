@@ -86,7 +86,7 @@ def test_map_task_to_response():
         defect_description="Yüzey Çizikleri: Test hatası",
         ai_timestamp=now.isoformat(),
         evaluation_source="llm",
-        model_version="gemini-2.5-flash-lite",
+        model_version="gemini-2.5-flash",
         prompt_version="v2.1",
         error=None,
         review_status="PENDING_REVIEW",
@@ -104,7 +104,7 @@ def test_map_task_to_response():
     assert response.is_relevant is True
     assert response.workflow_status == "COMPLETED"
     assert response.evaluation_source == "llm"
-    assert response.model_version == "gemini-2.5-flash-lite"
+    assert response.model_version == "gemini-2.5-flash"
     assert response.prompt_version == "v2.1"
     assert response.error is None
 
@@ -115,7 +115,7 @@ def test_map_task_to_response():
     assert response.ai_evaluation.confidence_score == 0.98
     assert response.ai_evaluation.defect_description == "Yüzey Çizikleri: Test hatası"
     assert response.ai_evaluation.evaluation_source == "llm"
-    assert response.ai_evaluation.model_version == "gemini-2.5-flash-lite"
+    assert response.ai_evaluation.model_version == "gemini-2.5-flash"
     assert response.ai_evaluation.prompt_version == "v2.1"
 
     # Multiple mapping helper

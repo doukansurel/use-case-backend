@@ -76,7 +76,7 @@ stateDiagram-v2
 | `workflow_status` | `str` | `PENDING`, `PROCESSING`, `COMPLETED`, `REJECTED_IRRELEVANT`, `FAILED` |
 | `error` | `Optional[str]` | Hata durumunda fırlatılan teknik mesaj veya kota uyarısı |
 | `evaluation_source` | `Optional[str]` | Değerlendirmenin kaynağı (`llm` veya `fallback`) |
-| `model_version` | `Optional[str]` | Kullanılan model adı (örn: `gemini-2.5-flash-lite`, `gpt-4o-mini`) |
+| `model_version` | `Optional[str]` | Kullanılan model adı (örn: `gemini-2.5-flash`, `gpt-4o-mini`) |
 | `prompt_version` | `Optional[str]` | Kullanılan prompt sürümü (örn: `v2.1`) |
 
 ---
@@ -176,7 +176,7 @@ Tüm rotalar `/api/v1` önekiyle sunulur. Swagger arayüzü: `/docs` · ReDoc: `
   "workflow_status": "COMPLETED",
   "error": null,
   "evaluation_source": "llm",
-  "model_version": "gemini-2.5-flash-lite",
+  "model_version": "gemini-2.5-flash",
   "prompt_version": "v2.1",
   "ai_evaluation": {
     "product_id": "PRD-LENS-101",
@@ -186,7 +186,7 @@ Tüm rotalar `/api/v1` önekiyle sunulur. Swagger arayüzü: `/docs` · ReDoc: `
     "confidence_score": 0.942,
     "defect_description": "Yüzey Çizikleri: Optik eleman yüzeyinde mikro çizik tespit edildi.",
     "evaluation_source": "llm",
-    "model_version": "gemini-2.5-flash-lite",
+    "model_version": "gemini-2.5-flash",
     "prompt_version": "v2.1"
   },
   "review_status": "PENDING_REVIEW",

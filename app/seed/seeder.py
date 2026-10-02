@@ -142,12 +142,12 @@ async def seed_database(db: AsyncSession, force: bool = False) -> dict:
             "is_relevant": False,
             "relevance_message": "LLM API hatası nedeniyle analiz tamamlanamadı.",
             "workflow_status": "FAILED",
-            "error": "LLM çağrısı başarısız oldu (gemini / gemini-2.5-flash-lite): 429 Resource Exhausted / Timeout. Yeniden deneme bekleniyor.",
+            "error": "LLM çağrısı başarısız oldu (gemini / gemini-2.5-flash): 429 Resource Exhausted / Timeout. Yeniden deneme bekleniyor.",
             "is_product_defect": None,
             "confidence_score": None,
             "defect_description": None,
             "evaluation_source": "llm",
-            "model_version": "gemini-2.5-flash-lite",
+            "model_version": "gemini-2.5-flash",
             "prompt_version": "v2.1",
             "ai_timestamp": (now - timedelta(minutes=2)).isoformat(),
             "review_status": "PENDING_REVIEW",
@@ -158,7 +158,7 @@ async def seed_database(db: AsyncSession, force: bool = False) -> dict:
 
     for item in sample_tasks:
         item.setdefault("evaluation_source", "llm")
-        item.setdefault("model_version", "gemini-2.5-flash-lite")
+        item.setdefault("model_version", "gemini-2.5-flash")
         item.setdefault("prompt_version", "v2.1")
         item.setdefault("error", None)
         task = InspectionTask(**item)

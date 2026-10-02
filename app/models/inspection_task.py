@@ -38,7 +38,7 @@ class InspectionTask(Base, TimestampMixin):
 
     # Denetim & Model Meta Verileri (Audit & Evaluation Metadata)
     evaluation_source: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="llm")  # "llm" veya "fallback"
-    model_version: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # örn: gemini-2.5-flash-lite, gpt-4o-mini
+    model_version: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # örn: gemini-2.5-flash, gpt-4o-mini
     prompt_version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="v2.1")
 
     # 3. Aşama: Kullanıcı Onayı ile Etiketleme (Human-in-the-Loop Annotation)
