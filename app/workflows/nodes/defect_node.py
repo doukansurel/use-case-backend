@@ -8,7 +8,13 @@ def defect_evaluation_node(state: QCState) -> Dict[str, Any]:
     2. DÜĞÜM (Node 2): LLM Kusur Değerlendirmesi.
     Alakalı görseller için parçada kusur olup olmadığını (is_product_defect),
     varsa kusur türünü ve açıklamasını (defect_description) ve güven skorunu (confidence_score) hesaplar.
+    
+    Hata durumunda workflow_status='FAILED' olarak işaretler ve hata detayını kaydeder.
     """
+    # Önceki adımda hata oluştuysa düğümü çalıştırma
+    if state.get("workflow_status") == "FAILED":
+        return {}
+
     image_url = state.get("image_url", "")
     product_id = state.get("product_id", "UNKNOWN")
 
@@ -17,10 +23,33 @@ def defect_evaluation_node(state: QCState) -> Dict[str, Any]:
         product_id=product_id
     )
 
+    workflow_status = eval_res.get("workflow_status", "COMPLETED")
+    error = eval_res.get("error")
+    evaluation_source = eval_res.get("evaluation_source", "llm")
+    model_version = eval_res.get("model_version")
+    prompt_version = eval_res.get("prompt_version")
+
+    if workflow_status == "FAILED":
+        return {
+            "category": None,
+            "is_product_defect": None,
+            "confidence_score": None,
+            "defect_description": None,
+            "workflow_status": "FAILED",
+            "error": error,
+            "evaluation_source": evaluation_source,
+            "model_version": model_version,
+            "prompt_version": prompt_version,
+        }
+
     return {
         "category": eval_res.get("category"),
-        "is_product_defect": eval_res["is_product_defect"],
-        "confidence_score": eval_res["confidence_score"],
-        "defect_description": eval_res["defect_description"],
+        "is_product_defect": eval_res.get("is_product_defect"),
+        "confidence_score": eval_res.get("confidence_score"),
+        "defect_description": eval_res.get("defect_description"),
         "workflow_status": "COMPLETED",
+        "error": None,
+        "evaluation_source": evaluation_source,
+        "model_version": model_version,
+        "prompt_version": prompt_version,
     }

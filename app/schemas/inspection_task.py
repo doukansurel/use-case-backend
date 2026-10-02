@@ -20,6 +20,9 @@ class LLMEvaluationOutput(BaseModel):
     confidence_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Model güven skoru")
     defect_description: Optional[str] = Field(None, description="Kusur türü ve açıklaması")
     category: Optional[str] = Field(None, description="Tespit edilen parça/ürün kategorisi (örn: Talaşlı İmalat, Vana, Dişli vb.)")
+    evaluation_source: Optional[str] = Field(None, description="Değerlendirme kaynağı: 'llm' veya 'fallback'")
+    model_version: Optional[str] = Field(None, description="Kullanılan LLM model adı ve versiyonu")
+    prompt_version: Optional[str] = Field(None, description="Kullanılan prompt versiyonu")
 
 
 class InspectionTaskCreate(BaseModel):
@@ -63,6 +66,10 @@ class InspectionTaskResponse(BaseModel):
     is_relevant: bool
     relevance_message: Optional[str]
     workflow_status: str
+    error: Optional[str] = None
+    evaluation_source: Optional[str] = None
+    model_version: Optional[str] = None
+    prompt_version: Optional[str] = None
     
     # Kullanıcının istediği formatta LLM değerlendirmesi
     ai_evaluation: LLMEvaluationOutput

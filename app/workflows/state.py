@@ -23,3 +23,8 @@ class QCState(TypedDict, total=False):
     # Genel İş Akışı Durumu
     workflow_status: str  # PENDING, PROCESSING, REJECTED_IRRELEVANT, COMPLETED, FAILED
     error: Optional[str]
+    
+    # Model ve Değerlendirme Meta Verileri
+    evaluation_source: Optional[str]  # "llm" veya "fallback"
+    model_version: Optional[str]
+    prompt_version: Optional[str]

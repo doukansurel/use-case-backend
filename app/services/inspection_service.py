@@ -24,7 +24,8 @@ class InspectionService:
         """
         1. LangGraph İş Akışını (Alakalılık Kontrolü -> Kategori & Kusur LLM Değerlendirmesi) çalıştırır.
         2. Alakasız ise akış otomatik kapanır ve kayıt 'REJECTED_IRRELEVANT' olarak açılır.
-        3. Alakalı ise 'COMPLETED' ve 'PENDING_REVIEW' (kullanıcı onayı bekleniyor) olarak veritabanına kaydeder.
+        3. LLM hatası varsa 'FAILED' olarak işaretlenir ve hata mesajı, model/prompt sürümü ile kaydedilir.
+        4. Alakalı ve başarılı ise 'COMPLETED' ve 'PENDING_REVIEW' (kullanıcı onayı bekleniyor) olarak veritabanına kaydeder.
         """
         # LangGraph iş akışını tetikle
         img_input = payload.image_base64 or payload.image_url
@@ -33,11 +34,16 @@ class InspectionService:
             image_url=img_input
         )
 
-        is_relevant = workflow_result.get("is_relevant", True)
         workflow_status = workflow_result.get("workflow_status", "COMPLETED")
+        is_relevant = workflow_result.get("is_relevant")
+        error_msg = workflow_result.get("error")
 
-        # Alakasız görsel ise otomatik inceleme reddedildi durumu
-        initial_review_status = "PENDING_REVIEW" if is_relevant else "REJECTED"
+        if workflow_status == "FAILED":
+            initial_review_status = "PENDING_REVIEW"
+        elif is_relevant is False or workflow_status == "REJECTED_IRRELEVANT":
+            initial_review_status = "REJECTED"
+        else:
+            initial_review_status = "PENDING_REVIEW"
 
         task_record = await self.repo.create(
             db,
@@ -46,18 +52,67 @@ class InspectionService:
                 "image_base64": img_input,
                 "image_url": payload.image_url or img_input,
                 "category": workflow_result.get("category"),
-                "is_relevant": is_relevant,
+                "is_relevant": is_relevant if is_relevant is not None else False,
                 "relevance_message": workflow_result.get("relevance_message"),
                 "workflow_status": workflow_status,
+                "error": error_msg,
                 "is_product_defect": workflow_result.get("is_product_defect"),
                 "confidence_score": workflow_result.get("confidence_score"),
                 "defect_description": workflow_result.get("defect_description"),
                 "ai_timestamp": workflow_result.get("timestamp"),
+                "evaluation_source": workflow_result.get("evaluation_source", "llm"),
+                "model_version": workflow_result.get("model_version"),
+                "prompt_version": workflow_result.get("prompt_version"),
                 "review_status": initial_review_status,
             }
         )
 
         return map_task_to_response(task_record)
+
+    async def retry_task(self, db: AsyncSession, task_id: int) -> InspectionTaskResponse:
+        """
+        Özellikle FAILED durumundaki veya operatörün yeniden analiz edilmesini istediği görevi tekrar dener.
+        LangGraph akışını baştan çalıştırır ve veritabanı kaydını yeni sonuçlarla günceller.
+        """
+        task = await self.repo.get(db, task_id)
+        if not task:
+            raise EntityNotFoundError("Kalite Kontrol Görevi", task_id)
+
+        img_input = task.image_base64 or task.image_url
+        workflow_result = await run_qc_pipeline(
+            product_id=task.product_id,
+            image_url=img_input
+        )
+
+        workflow_status = workflow_result.get("workflow_status", "COMPLETED")
+        is_relevant = workflow_result.get("is_relevant")
+        error_msg = workflow_result.get("error")
+
+        if workflow_status == "FAILED":
+            new_review_status = task.review_status or "PENDING_REVIEW"
+        elif is_relevant is False or workflow_status == "REJECTED_IRRELEVANT":
+            new_review_status = "REJECTED"
+        else:
+            new_review_status = "PENDING_REVIEW"
+
+        update_payload = {
+            "category": workflow_result.get("category"),
+            "is_relevant": is_relevant if is_relevant is not None else False,
+            "relevance_message": workflow_result.get("relevance_message"),
+            "workflow_status": workflow_status,
+            "error": error_msg,
+            "is_product_defect": workflow_result.get("is_product_defect"),
+            "confidence_score": workflow_result.get("confidence_score"),
+            "defect_description": workflow_result.get("defect_description"),
+            "ai_timestamp": workflow_result.get("timestamp"),
+            "evaluation_source": workflow_result.get("evaluation_source", "llm"),
+            "model_version": workflow_result.get("model_version"),
+            "prompt_version": workflow_result.get("prompt_version"),
+            "review_status": new_review_status,
+        }
+
+        updated = await self.repo.update(db, db_obj=task, obj_in=update_payload)
+        return map_task_to_response(updated)
 
     async def get_by_id(self, db: AsyncSession, task_id: int) -> InspectionTaskResponse:
         task = await self.repo.get(db, task_id)
@@ -94,6 +149,7 @@ class InspectionService:
         db: AsyncSession,
         *,
         review_status: Optional[str] = None,
+        workflow_status: Optional[str] = None,
         is_relevant: Optional[bool] = None,
         is_product_defect: Optional[bool] = None,
         product_id: Optional[str] = None,
@@ -105,6 +161,7 @@ class InspectionService:
         items = await self.repo.filter_tasks(
             db,
             review_status=review_status,
+            workflow_status=workflow_status,
             is_relevant=is_relevant,
             is_product_defect=is_product_defect,
             product_id=product_id,
@@ -115,6 +172,7 @@ class InspectionService:
         total = await self.repo.count_filtered(
             db,
             review_status=review_status,
+            workflow_status=workflow_status,
             is_relevant=is_relevant,
             is_product_defect=is_product_defect,
             product_id=product_id,

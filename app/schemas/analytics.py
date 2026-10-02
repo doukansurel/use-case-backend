@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from app.schemas.inspection_task import InspectionTaskResponse
 
@@ -11,6 +11,7 @@ class LabelingStatsResponse(BaseModel):
     ai_defect_count: int
     ai_clean_count: int
     ai_defect_rate: float
+    failed_count: Optional[int] = 0
 
     # İnsan onay / etiketleme metrikleri
     pending_review_count: int

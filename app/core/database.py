@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 import logging
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from app.core.config import settings
@@ -83,9 +84,31 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Veritabanı tablolarını otomatik oluşturur (NeonDB veya SQLite)."""
+    """Veritabanı tablolarını otomatik oluşturur ve yeni şema alanlarını kontrol eder."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        # inspection_tasks tablosuna yeni sütunların eklenmesi (Güvenli şema güncelleme)
+        try:
+            if "sqlite" in str(engine.url):
+                res = await conn.execute(text("PRAGMA table_info(inspection_tasks)"))
+                cols = [row[1] for row in res.fetchall()]
+                if cols:
+                    if "error" not in cols:
+                        await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN error TEXT"))
+                    if "evaluation_source" not in cols:
+                        await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN evaluation_source VARCHAR(50) DEFAULT 'llm'"))
+                    if "model_version" not in cols:
+                        await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN model_version VARCHAR(100)"))
+                    if "prompt_version" not in cols:
+                        await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN prompt_version VARCHAR(50) DEFAULT 'v2.1'"))
+            else:
+                await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN IF NOT EXISTS error TEXT"))
+                await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN IF NOT EXISTS evaluation_source VARCHAR(50) DEFAULT 'llm'"))
+                await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN IF NOT EXISTS model_version VARCHAR(100)"))
+                await conn.execute(text("ALTER TABLE inspection_tasks ADD COLUMN IF NOT EXISTS prompt_version VARCHAR(50) DEFAULT 'v2.1'"))
+        except Exception as e:
+            logger.debug(f"Şema sütun migrasyon denetimi: {e}")
 
 
 async def close_db() -> None:

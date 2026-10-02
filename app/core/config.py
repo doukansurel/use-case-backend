@@ -18,6 +18,9 @@ class Settings(BaseSettings):
 
     # LLM / Model Provider Settings ("gemini", "openai")
     LLM_PROVIDER: str = "gemini"
+    LLM_MAX_RETRIES: int = 2
+    PROMPT_VERSION: str = "v2.1"
+    ENABLE_HEURISTIC_FALLBACK: bool = False  # Üretimde varsayılan olarak kapalıdır; sahte heuristik sonuçlar yerine FAILED durumuna geçilir.
 
     # Google Gemini Settings
     GEMINI_API_KEY: Optional[str] = None

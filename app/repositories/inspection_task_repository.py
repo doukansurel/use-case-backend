@@ -13,6 +13,7 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
     def _build_filter_query(
         self,
         review_status: Optional[str] = None,
+        workflow_status: Optional[str] = None,
         is_relevant: Optional[bool] = None,
         is_product_defect: Optional[bool] = None,
         product_id: Optional[str] = None,
@@ -21,6 +22,8 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
         query = select(InspectionTask)
         if review_status:
             query = query.where(InspectionTask.review_status == review_status.upper())
+        if workflow_status:
+            query = query.where(InspectionTask.workflow_status == workflow_status.upper())
         if is_relevant is not None:
             query = query.where(InspectionTask.is_relevant == is_relevant)
         if is_product_defect is not None:
@@ -36,6 +39,7 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
         db: AsyncSession,
         *,
         review_status: Optional[str] = None,
+        workflow_status: Optional[str] = None,
         is_relevant: Optional[bool] = None,
         is_product_defect: Optional[bool] = None,
         product_id: Optional[str] = None,
@@ -46,6 +50,7 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
         """Görevleri dinamik filtrelerle sayfalı olarak getirir."""
         query = self._build_filter_query(
             review_status=review_status,
+            workflow_status=workflow_status,
             is_relevant=is_relevant,
             is_product_defect=is_product_defect,
             product_id=product_id,
@@ -60,6 +65,7 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
         db: AsyncSession,
         *,
         review_status: Optional[str] = None,
+        workflow_status: Optional[str] = None,
         is_relevant: Optional[bool] = None,
         is_product_defect: Optional[bool] = None,
         product_id: Optional[str] = None,
@@ -68,6 +74,7 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
         """Filtreye uyan toplam kayıt sayısını döner."""
         base_query = self._build_filter_query(
             review_status=review_status,
+            workflow_status=workflow_status,
             is_relevant=is_relevant,
             is_product_defect=is_product_defect,
             product_id=product_id,
@@ -121,6 +128,10 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
             select(func.count(InspectionTask.id)).where(InspectionTask.user_is_defect.is_(False))
         ) or 0
 
+        failed_count = await db.scalar(
+            select(func.count(InspectionTask.id)).where(InspectionTask.workflow_status == "FAILED")
+        ) or 0
+
         ai_defect_rate = round((ai_defect / relevant * 100), 2) if relevant > 0 else 0.0
 
         return {
@@ -130,6 +141,7 @@ class InspectionTaskRepository(BaseRepository[InspectionTask, InspectionTaskCrea
             "ai_defect_count": ai_defect,
             "ai_clean_count": ai_clean,
             "ai_defect_rate": ai_defect_rate,
+            "failed_count": failed_count,
             "pending_review_count": pending_review,
             "approved_count": approved,
             "corrected_count": corrected,

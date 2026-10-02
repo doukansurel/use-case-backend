@@ -20,6 +20,7 @@ class AnalyticsService:
             ai_defect_count=stats["ai_defect_count"],
             ai_clean_count=stats["ai_clean_count"],
             ai_defect_rate=stats["ai_defect_rate"],
+            failed_count=stats.get("failed_count", 0),
             pending_review_count=stats["pending_review_count"],
             approved_count=stats["approved_count"],
             corrected_count=stats["corrected_count"],

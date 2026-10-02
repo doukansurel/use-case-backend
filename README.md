@@ -53,14 +53,15 @@ LLM'in döndürdüğü kategori bu listeyle eşleştirilir; eşleşmezse varsay�
 
 ---
 
-## 🤖 Çoklu LLM Sağlayıcı Desteği (Google Gemini & OpenAI)
+## 🤖 Çoklu LLM Sağlayıcı Desteği & Üretim Güvenliği
 
 Sistem `LLMNodeBuilder` üzerinden hem **Google Gemini** hem de **OpenAI** modellerini destekleyecek şekilde tasarlanmıştır:
-- **Varsayılan Sağlayıcı:** Google Gemini (kod varsayılanı `gemini-2.5-flash`, `GEMINI_MODEL` ile değiştirilebilir)
-- `.env` üzerinden `LLM_PROVIDER="gemini"` ve `GEMINI_API_KEY` belirlenerek doğrudan kullanılabilir.
-- İstenirse `LLM_PROVIDER="openai"` ve `OPENAI_API_KEY` ile OpenAI Vision modellerine (`gpt-4o-mini`) tek bir parametreyle geçilebilir.
-- Tercih edilen sağlayıcının anahtarı yoksa diğer sağlayıcının anahtarı denenir.
-- API anahtarı girilmediğinde, istemci başlatılamadığında veya kota aşıldığında (HTTP 429) geliştirme ve testleri engellememek için anahtar kelime tabanlı heuristik fallback motoru çalışır.
+- **Varsayılan Sağlayıcı:** Google Gemini (kod varsayılanı `gemini-2.5-flash`, `GEMINI_MODEL` ile değiştirilebilir).
+- **Hata Yönetimi ve Yeniden Deneme (Exponential Backoff):** API çağrılarında üstel geri çekilme ile yeniden deneme (`LLM_MAX_RETRIES=2`) yapılır.
+- **Güvenli FAILED Durumu:** Üretimde sahte anahtar kelime heuristikleri devreden çıkarılmıştır; API hatası veya kota aşımında sistem sonuç uydurmaz, iş akışı `workflow_status="FAILED"` olarak kaydedilir ve hata mesajı `error` alanına yazılır.
+- **Yeniden Deneme Endpoint'i (`POST /tasks/{id}/retry`):** Başarısız görevler doğrudan tek bir API çağrısıyla yeniden analiz edilebilir.
+- **Denetim İzi (Auditability):** Her kayda `evaluation_source` (`llm` / `fallback`), model adı (`model_version`) ve prompt sürümü (`prompt_version`) kaydedilir.
+- **Kalibrasyon & Doğruluk:** Değer dönmediğinde yapay 0.95 skoru atanmaz; bilinmeyen kategoriler sessizce "Optik Lens Grupları"na zorlanmaz.
 
 ---
 
@@ -157,8 +158,8 @@ pip install -r requirements.txt
 # Sunucuyu başlatın:
 python run.py
 
-# Testleri çalıştırın (13/13 Passed):
-PYTHONPATH=. pytest -v tests
+# Testleri çalıştırın (17/17 Passed):
+source venv/bin/activate && pytest -v tests
 ```
 
 - **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)

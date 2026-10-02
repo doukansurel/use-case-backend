@@ -27,6 +27,7 @@ class InspectionTask(Base, TimestampMixin):
         nullable=False,
         index=True
     )  # PENDING, REJECTED_IRRELEVANT, COMPLETED, FAILED
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # LLM veya sistem hata mesajı
 
     # 2. Aşama: LLM Kusur Değerlendirmesi (LangGraph 2. Düğüm Çıktısı)
     is_product_defect: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
@@ -34,6 +35,11 @@ class InspectionTask(Base, TimestampMixin):
     defect_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
     ai_timestamp: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
+    # Denetim & Model Meta Verileri (Audit & Evaluation Metadata)
+    evaluation_source: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="llm")  # "llm" veya "fallback"
+    model_version: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # örn: gemini-2.5-flash-lite, gpt-4o-mini
+    prompt_version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="v2.1")
 
     # 3. Aşama: Kullanıcı Onayı ile Etiketleme (Human-in-the-Loop Annotation)
     review_status: Mapped[str] = mapped_column(

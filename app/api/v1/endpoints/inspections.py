@@ -74,6 +74,7 @@ async def get_categories_and_defects():
 )
 async def list_inspection_tasks(
     review_status: Optional[str] = Query(None, description="Onay durumu: PENDING_REVIEW, APPROVED, CORRECTED, REJECTED"),
+    workflow_status: Optional[str] = Query(None, description="İş akışı durumu: PENDING, PROCESSING, COMPLETED, REJECTED_IRRELEVANT, FAILED"),
     is_relevant: Optional[bool] = Query(None, description="Görsel alakalılık filtresi"),
     is_product_defect: Optional[bool] = Query(None, description="Kusur durumu filtresi"),
     product_id: Optional[str] = Query(None, description="Ürün kodu filtresi"),
@@ -88,6 +89,7 @@ async def list_inspection_tasks(
     return await inspection_service.list_tasks(
         db,
         review_status=review_status,
+        workflow_status=workflow_status,
         is_relevant=is_relevant,
         is_product_defect=is_product_defect,
         product_id=product_id,
@@ -127,6 +129,22 @@ async def submit_human_review(
     - **REJECTED:** Hatalı veya incelenemez görsel olarak işaretler.
     """
     return await inspection_service.submit_review(db, task_id=task_id, review=payload)
+
+
+@router.post(
+    "/tasks/{task_id}/retry",
+    response_model=InspectionTaskResponse,
+    summary="Görevi Yeniden Dene (Retry FAILED / Re-evaluate)"
+)
+async def retry_inspection_task(
+    task_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Özellikle LLM hatası nedeniyle FAILED durumuna düşmüş veya yeniden
+    analiz edilmesi istenen görevi LangGraph iş akışından tekrar geçirir.
+    """
+    return await inspection_service.retry_task(db, task_id=task_id)
 
 
 @router.delete(

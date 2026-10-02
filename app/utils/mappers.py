@@ -24,6 +24,9 @@ def map_task_to_response(task: InspectionTask | Any) -> InspectionTaskResponse:
         is_product_defect=getattr(task, "is_product_defect", None),
         confidence_score=getattr(task, "confidence_score", None),
         defect_description=getattr(task, "defect_description", None),
+        evaluation_source=getattr(task, "evaluation_source", "llm"),
+        model_version=getattr(task, "model_version", None),
+        prompt_version=getattr(task, "prompt_version", None),
     )
 
     b64_val = getattr(task, "image_base64", None) or getattr(task, "image_url", "")
@@ -37,6 +40,10 @@ def map_task_to_response(task: InspectionTask | Any) -> InspectionTaskResponse:
         is_relevant=task.is_relevant,
         relevance_message=getattr(task, "relevance_message", None),
         workflow_status=task.workflow_status,
+        error=getattr(task, "error", None),
+        evaluation_source=getattr(task, "evaluation_source", "llm"),
+        model_version=getattr(task, "model_version", None),
+        prompt_version=getattr(task, "prompt_version", None),
         ai_evaluation=ai_eval,
         review_status=task.review_status,
         user_is_defect=getattr(task, "user_is_defect", None),
